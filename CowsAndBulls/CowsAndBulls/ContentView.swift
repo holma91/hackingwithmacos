@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
   @State private var guess = ""
   @State private var guesses = [String]()
+  @State private var guessesColors = [Color]()
   @State private var answer = ""
   @State private var playerWon = false
   @State private var playerLost = false
@@ -41,16 +42,25 @@ struct ContentView: View {
     guard guess.rangeOfCharacter(from: badCharacters) == nil else {return}
       
     guesses.insert(guess, at: 0)
-    if result(for: guess).contains("\(answerLength)b") {
+    let (bulls, cows) = result(for: guess)
+    if bulls == 4 {
       playerWon = true
     } else if maximumGuesses == guesses.count {
       playerLost = true
     }
     
+    if cows == 4 {
+      guessesColors.insert(.green, at: 0)
+    } else if cows == 0 && bulls == 0 {
+      guessesColors.insert(.red, at: 0)
+    } else {
+      guessesColors.insert(.yellow, at: 0)
+    }
+    
     guess = ""
   }
   
-  func result(for guess: String) -> String {
+  func result(for guess: String) -> (Int, Int) {
     var bulls = 0
     var cows = 0
     let guessLetters = Array(guess)
@@ -63,13 +73,13 @@ struct ContentView: View {
       }
     }
     
-    return "\(bulls)b \(cows)c"
+    return (bulls, cows)
   }
   
   var body: some View {
     VStack(spacing: 0) {
       HStack {
-        TextField("Enter a guess...", text: $guess).onSubmit(submitGuess) // two-way binding
+        TextField("Enter a guess...", text: $guess).onSubmit(submitGuess)
         Button("Go", action: submitGuess)
       }
       .padding()
@@ -82,7 +92,8 @@ struct ContentView: View {
           Text(guess)
           Spacer()
           if shouldShowResult {
-            Text(result(for: guess))
+            let (bulls, cows) = result(for: guess)
+            Text("\(bulls)b \(cows)c").foregroundColor(guessesColors[index])
           }
         }
       }
